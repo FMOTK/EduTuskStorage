@@ -8,8 +8,6 @@ import (
 
 type TuskStatus string
 
-const TTL string = "30s"
-
 const (
 	RunningStatus   TuskStatus = "running"
 	CompletedStatus TuskStatus = "complited"
@@ -26,7 +24,7 @@ type Tusk struct {
 	expireAt  time.Time
 }
 
-func NewTask(duration time.Duration) *Tusk {
+func NewTask(duration time.Duration, TTL string) *Tusk {
 
 	id := uuid.New().String()
 
