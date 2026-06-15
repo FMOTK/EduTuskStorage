@@ -11,6 +11,7 @@ import (
 
 	tuskstorage "httpServer/TuskStorage"
 	"httpServer/myApi"
+	"httpServer/myApi/middleware"
 )
 
 func main() {
@@ -19,13 +20,18 @@ func main() {
 	defer stop()
 
 	storage := tuskstorage.NewTuskStorage(ctx)
-
 	handler := myApi.NewHandler(ctx, storage)
 
-	http.HandleFunc("/work", handler.CreateTuskHandler)
-	http.HandleFunc("/work/status", handler.GetTuskStatusHandler)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/work", handler.CreateTuskHandler)
+	mux.HandleFunc("/work/status", handler.GetTuskStatusHandler)
 
-	server := &http.Server{Addr: ":8080"}
+	fHandler := middleware.RequestIdMiddleware(middleware.Logger(mux))
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: fHandler,
+	}
 
 	go func() {
 		log.Printf("server started on %s", server.Addr)
