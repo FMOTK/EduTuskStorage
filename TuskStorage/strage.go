@@ -50,7 +50,7 @@ func (s *TuskStorage) CreateTusk(duration time.Duration) *Tusk {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	t := NewTask(duration)
+	t := NewTask(duration, "1m")
 	tuskID := t.GetUUID()
 	s.data[tuskID] = t
 
