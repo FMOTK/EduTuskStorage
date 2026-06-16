@@ -75,3 +75,7 @@ func (h *Handler) GetTuskStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Tusk status is %s", status)
 }
+
+func (h *Handler) Panicandler(w http.ResponseWriter, r *http.Request) {
+	panic("test panic from handler")
+}
