@@ -13,7 +13,6 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 				http.Error(w, "Internal server Error", http.StatusInternalServerError)
 				log.Printf("PANIC RECOVERED: %v", rec)
 			}
-			log.Println(r)
 		}()
 
 		next.ServeHTTP(w, r)

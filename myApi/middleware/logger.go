@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -42,7 +43,7 @@ func Logger(next http.Handler) http.Handler {
 			r.Method,
 			r.URL.String(),
 			respWriter.statusCode,
-			rDuration.String(),
+			fmt.Sprintf("%dms", rDuration.Milliseconds()),
 		)
 	})
 }
