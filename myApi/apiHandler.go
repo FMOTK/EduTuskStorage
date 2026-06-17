@@ -38,7 +38,8 @@ func (h *Handler) CreateTuskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t := h.storage.CreateTusk(duration)
+	t := storage.NewTask(duration, "1m")
+	h.storage.StoreTusk(t)
 
 	resp := Response{
 		Status: t.GetStatus(),
@@ -74,6 +75,10 @@ func (h *Handler) GetTuskStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Tusk status is %s", status)
+}
+
+func (h *Handler) DeleteTuskHandler(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func (h *Handler) Panicandler(w http.ResponseWriter, r *http.Request) {

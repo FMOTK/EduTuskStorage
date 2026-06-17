@@ -29,11 +29,17 @@ func NewTuskStorage(ctx context.Context) *TuskStorage {
 			default:
 				s.mu.Lock()
 				for id, t := range s.data {
-					currTime := time.Now().UTC()
 
+					currTime := time.Now().UTC()
 					if currTime.After(t.expireAt) {
+						t.StopTusk()
+					}
+
+					select {
+					case <-t.stop:
 						delete(s.data, id)
 						log.Printf("Tusk id=\"%s\" deleted", id)
+					default:
 					}
 				}
 				s.mu.Unlock()
@@ -46,15 +52,12 @@ func NewTuskStorage(ctx context.Context) *TuskStorage {
 	return s
 }
 
-func (s *TuskStorage) CreateTusk(duration time.Duration) *Tusk {
+func (s *TuskStorage) StoreTusk(t *Tusk) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	t := NewTask(duration, "1m")
 	tuskID := t.GetUUID()
 	s.data[tuskID] = t
-
-	return t
 }
 
 func (s *TuskStorage) UpdateTuskById(id string, status TuskStatus) error {
