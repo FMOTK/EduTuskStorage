@@ -25,8 +25,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/work", handler.CreateTuskHandler)
 	mux.HandleFunc("/work/status", handler.GetTuskStatusHandler)
+	mux.HandleFunc("/panic", handler.Panicandler)
 
-	fHandler := middleware.RequestIdMiddleware(middleware.Logger(mux))
+	fHandler := middleware.RequestIdMiddleware(middleware.Logger(middleware.RecoveryMiddleware(mux)))
 
 	server := &http.Server{
 		Addr:    ":8080",
