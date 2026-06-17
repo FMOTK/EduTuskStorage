@@ -24,7 +24,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	id := resp.Header.Get(string("X-Request-ID"))
+	id := resp.Header.Get("X-Request-ID")
 
 	if err := uuid.Validate(id); err != nil {
 		t.Errorf("Request ID doesn`t initial : %v", err)
