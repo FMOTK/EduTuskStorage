@@ -6,6 +6,8 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type TuskStorage struct {
@@ -29,17 +31,10 @@ func NewTuskStorage(ctx context.Context) *TuskStorage {
 			default:
 				s.mu.Lock()
 				for id, t := range s.data {
-
 					currTime := time.Now().UTC()
 					if currTime.After(t.expireAt) {
-						t.StopTusk()
-					}
-
-					select {
-					case <-t.stop:
 						delete(s.data, id)
 						log.Printf("Tusk id=\"%s\" deleted", id)
-					default:
 					}
 				}
 				s.mu.Unlock()
@@ -88,6 +83,16 @@ func (s *TuskStorage) DeleteTuskById(id string) error {
 	defer s.mu.Unlock()
 
 	delete(s.data, id)
+
+	return nil
+}
+
+// TODO : Реализовать метод отмены задачи
+func (s *TuskStorage) CancelTusk(id string) error {
+
+	if err := uuid.Validate(id); err != nil {
+		return err
+	}
 
 	return nil
 }

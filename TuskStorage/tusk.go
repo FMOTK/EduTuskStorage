@@ -1,6 +1,7 @@
 package tuskstorage
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ const (
 	CompletedStatus TuskStatus = "complited"
 	FailedStatus    TuskStatus = "failed"
 	PendingStatus   TuskStatus = "pending"
+	CancelStatus    TuskStatus = "cancel"
 )
 
 type Tusk struct {
@@ -22,6 +24,9 @@ type Tusk struct {
 
 	createdAt time.Time
 	expireAt  time.Time
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func NewTask(duration time.Duration, TTL string) *Tusk {
@@ -47,4 +52,15 @@ func (t *Tusk) GetUUID() string {
 
 func (t *Tusk) GetStatus() string {
 	return string(t.status)
+}
+
+// TODO: Отменя задачи через контекст
+func (t *Tusk) Cancel() error {
+	select {
+	case <-t.ctx.Done():
+		return nil
+	default:
+		t.cancel()
+		return nil
+	}
 }

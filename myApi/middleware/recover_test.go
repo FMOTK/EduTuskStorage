@@ -8,7 +8,6 @@ import (
 )
 
 func TestRecoveryMiddleware(t *testing.T) {
-
 	callCount := 0
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
