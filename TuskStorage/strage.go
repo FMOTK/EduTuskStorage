@@ -3,11 +3,8 @@ package tuskstorage
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type TuskStorage struct {
@@ -21,33 +18,26 @@ func NewTuskStorage(ctx context.Context) *TuskStorage {
 		data: make(map[string]*Tusk),
 		ctx:  ctx,
 	}
-
-	go func() {
-		for {
-			select {
-			case <-s.ctx.Done():
-				return
-
-			default:
-				s.mu.Lock()
-				for id, t := range s.data {
-					currTime := time.Now().UTC()
-					if currTime.After(t.expireAt) {
-						delete(s.data, id)
-						log.Printf("Tusk id=\"%s\" deleted", id)
-					}
-				}
-				s.mu.Unlock()
-
-				time.Sleep(2 * time.Second)
-			}
-		}
-	}()
-
 	return s
 }
 
-func (s *TuskStorage) StoreTusk(t *Tusk) {
+func (s *TuskStorage) GetExpireds() map[string]*Tusk {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	out := make(map[string]*Tusk)
+	currTime := time.Now().UTC()
+
+	for _, t := range s.data {
+		if currTime.After(t.expireAt) {
+			out[t.GetUUID()] = t
+		}
+	}
+
+	return out
+}
+
+func (s *TuskStorage) Set(t *Tusk) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -55,44 +45,37 @@ func (s *TuskStorage) StoreTusk(t *Tusk) {
 	s.data[tuskID] = t
 }
 
-func (s *TuskStorage) UpdateTuskById(id string, status TuskStatus) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if tusk, ok := s.data[id]; !ok {
-		return fmt.Errorf("Tusk with id=\"%s\"not found", id)
-	} else {
-		tusk.status = status
-	}
-	return nil
-}
-
-func (s *TuskStorage) GetTuskStatuById(id string) (TuskStatus, error) {
+func (s *TuskStorage) Get(id string) (*Tusk, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	if tusk, ok := s.data[id]; !ok {
-		return "", fmt.Errorf("Tusk with id=\"%s\"not found", id)
+		return nil, fmt.Errorf("Tusk with id=\"%s\"not found", id)
 	} else {
-		return tusk.status, nil
+		result := tusk
+		return result, nil
 	}
 }
 
-func (s *TuskStorage) DeleteTuskById(id string) error {
+func (s *TuskStorage) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	tusk, ok := s.data[id]
+	if !ok {
+		return fmt.Errorf("no tusk ID=%s in storage", id)
+	}
+
+	tusk.Cancel()
 	delete(s.data, id)
 
 	return nil
 }
 
-// TODO : Реализовать метод отмены задачи
-func (s *TuskStorage) CancelTusk(id string) error {
+func (s *TuskStorage) IsContain(id string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	if err := uuid.Validate(id); err != nil {
-		return err
-	}
-
-	return nil
+	_, ok := s.data[id]
+	return ok
 }
